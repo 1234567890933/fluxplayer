@@ -124,7 +124,7 @@ class PlayerEffectsController(private val context: Context) {
         }.getOrElse { emptyList() }
 
         if (governor.budget == EffectBudget.FULL && full.isNotEmpty() &&
-            tryApply(exoPlayer, full)
+            tryApply(full)
         ) {
             governor.onApplySucceeded()
             isDegraded = false
@@ -134,7 +134,11 @@ class PlayerEffectsController(private val context: Context) {
         // cheapest effects the engine has and work on almost any GL ES 2.0 device.
         val light = runCatching {
             ColorEffects.build(
-                settings = scaled.copy(sharpness = 0f, clarity = 0f, noiseReduce = 0f),
+                settings = scaled.copy(
+                    sharpness = 0f,
+                    clarity = 0f,
+                    noiseReduce = 0f,
+                ),
                 hdrEnabled = isHdrActive,
                 deviceHasHdrDisplay = deviceHasHdrDisplay,
                 hdrContent = hdrContent,
@@ -142,7 +146,7 @@ class PlayerEffectsController(private val context: Context) {
             )
         }.getOrElse { emptyList() }
 
-        if (light.isNotEmpty() && tryApply(exoPlayer, light)) {
+        if (light.isNotEmpty() && tryApply(light)) {
             governor.onApplySucceeded()
             isDegraded = false
             return
@@ -153,6 +157,6 @@ class PlayerEffectsController(private val context: Context) {
         isDegraded = true
     }
 
-    private fun tryApply(exoPlayer: ExoPlayer, effects: List<Effect>): Boolean =
-        runCatching { exoPlayer.setVideoEffects(effects) }.isSuccess
+    private fun tryApply(effects: List<Effect>): Boolean =
+        runCatching { player?.setVideoEffects(effects) }.isSuccess
 }

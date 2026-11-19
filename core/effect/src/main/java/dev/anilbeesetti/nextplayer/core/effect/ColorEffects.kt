@@ -106,7 +106,10 @@ object ColorEffects {
             } else {
                 // Strength comes from the governor: a low-RAM or warm device gets a gentler
                 // grade, so the frame processor is never asked for more than it can afford.
-                val strength = hdrStrength.coerceIn(0f, 1f)
+                val strength = hdrStrength.coerceIn(
+                    minimumValue = 0f,
+                    maximumValue = 1f,
+                )
                 effects += Contrast(1f + 0.18f * strength)
                 effects += SaturationMatrix(1f + 0.15f * strength)
             }
