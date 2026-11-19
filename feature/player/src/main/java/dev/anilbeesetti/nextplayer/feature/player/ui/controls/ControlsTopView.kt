@@ -3,13 +3,16 @@ package dev.anilbeesetti.nextplayer.feature.player.ui.controls
 import androidx.annotation.OptIn
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -49,72 +52,103 @@ fun ControlsTopView(
     onAudioClick: () -> Unit = {},
     onSubtitleClick: () -> Unit = {},
     onPlaylistClick: () -> Unit = {},
+    hdrOn: Boolean = false,
+    onHdrToggle: () -> Unit = {},
+    onInfoClick: () -> Unit = {},
+    onColorGradingClick: () -> Unit = {},
 ) {
     val firstControlFocusRequester = remember { FocusRequester() }
     val systemBarsPadding = WindowInsets.systemBars.union(
         WindowInsets.displayCutout,
     ).asPaddingValues()
     val decoderDescription = stringResource(R.string.select_decoders)
-    // Add top spacing only when the system bars don't already provide it (e.g. on TV / landscape).
     val extraTopPadding = if (systemBarsPadding.calculateTopPadding() == 0.dp) 16.dp else 0.dp
-    Row(
+    Column(
         modifier = modifier
             .padding(systemBarsPadding.copy(bottom = 0.dp))
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp)
-            .padding(top = extraTopPadding)
-            .focusProperties { onEnter = { firstControlFocusRequester.requestFocus() } }
-            .focusGroup(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(top = extraTopPadding),
     ) {
-        PlayerButton(onClick = onBackClick) {
-            Icon(
-                painter = painterResource(R.drawable.ic_arrow_left),
-                contentDescription = null,
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
+                .focusProperties { onEnter = { firstControlFocusRequester.requestFocus() } }
+                .focusGroup(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            PlayerButton(onClick = onBackClick) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_arrow_left),
+                    contentDescription = null,
+                )
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(lineBreak = LineBreak.Heading),
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(weight = 1f),
             )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PlayerButton(
+                    modifier = Modifier
+                        .semantics { contentDescription = decoderDescription }
+                        .focusRequester(focusRequester = firstControlFocusRequester),
+                    onClick = onDecoderClick,
+                ) {
+                    Text(
+                        text = stringResource((videoDecoderMode ?: DecoderMode.HARDWARE).labelRes),
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                    )
+                }
+                PlayerButton(onClick = onPlaylistClick) {
+                    Icon(painter = painterResource(R.drawable.ic_playlist), contentDescription = null)
+                }
+                PlayerButton(onClick = onAudioClick) {
+                    Icon(painter = painterResource(R.drawable.ic_audio_track), contentDescription = null)
+                }
+                PlayerButton(onClick = onSubtitleClick) {
+                    Icon(painter = painterResource(R.drawable.ic_subtitle_track), contentDescription = null)
+                }
+            }
         }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(lineBreak = LineBreak.Heading),
-            color = Color.White,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(weight = 1f),
-        )
 
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            PlayerButton(
-                modifier = Modifier
-                    .semantics { contentDescription = decoderDescription }
-                    .focusRequester(focusRequester = firstControlFocusRequester),
-                onClick = onDecoderClick,
-            ) {
-                Text(
-                    text = stringResource((videoDecoderMode ?: DecoderMode.HARDWARE).labelRes),
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
+            PlayerButton(onClick = onHdrToggle) {
+                BasicText(
+                    text = if (hdrOn) "HDR on" else "HDR",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = if (hdrOn) MaterialTheme.colorScheme.primary else Color.White,
+                    ),
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
-            PlayerButton(onClick = onPlaylistClick) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_playlist),
-                    contentDescription = null,
+            PlayerButton(onClick = onInfoClick) {
+                BasicText(
+                    text = "Info",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
-            PlayerButton(onClick = onAudioClick) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_audio_track),
-                    contentDescription = null,
-                )
-            }
-            PlayerButton(onClick = onSubtitleClick) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_subtitle_track),
-                    contentDescription = null,
+            PlayerButton(onClick = onColorGradingClick) {
+                BasicText(
+                    text = "Colour",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
         }
@@ -126,11 +160,7 @@ fun ControlsTopView(
 private fun ControlsTopViewPreview() {
     NextPlayerTheme(darkTheme = true) {
         Surface {
-            ControlsTopView(
-                title = "Title",
-                videoDecoderMode = DecoderMode.HARDWARE,
-                onBackClick = {},
-            )
+            ControlsTopView(title = "Title", videoDecoderMode = DecoderMode.HARDWARE, onBackClick = {})
         }
     }
 }

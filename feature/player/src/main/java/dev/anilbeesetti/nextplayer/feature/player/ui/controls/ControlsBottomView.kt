@@ -88,10 +88,6 @@ fun ControlsBottomView(
     onPlayInBackgroundClick: () -> Unit,
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
-    onColorGradingClick: () -> Unit = {},
-    onInfoClick: () -> Unit = {},
-    hdrOn: Boolean = false,
-    onHdrToggle: () -> Unit = {},
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(
         WindowInsets.displayCutout,
@@ -218,43 +214,6 @@ fun ControlsBottomView(
 
                         if (!isTv) {
                             RotateButton()
-                        }
-
-                        PlayerButton(
-                            modifier = Modifier.focusProperties { canFocus = false },
-                            onClick = onHdrToggle,
-                        ) {
-                            BasicText(
-                                text = if (hdrOn) "HDR on" else "HDR",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = if (hdrOn) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
-                                    },
-                                ),
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                            )
-                        }
-                        PlayerButton(
-                            modifier = Modifier.focusProperties { canFocus = false },
-                            onClick = onInfoClick,
-                        ) {
-                            BasicText(
-                                text = "Info",
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                            )
-                        }
-                        PlayerButton(
-                            modifier = Modifier.focusProperties { canFocus = false },
-                            onClick = onColorGradingClick,
-                        ) {
-                            BasicText(
-                                text = "Colour",
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                            )
                         }
                     }
                 }

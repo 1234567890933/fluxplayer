@@ -93,26 +93,10 @@ fun PlayerControls(
                     onSubtitleClick = { onShowOverlay(OverlayView.SUBTITLE_SELECTOR) },
                     onPlaylistClick = { onShowOverlay(OverlayView.PLAYLIST) },
                     onBackClick = onBackClick,
-                )
-            }
-            Spacer(modifier = Modifier.weight(weight = 1f))
-            AnimatedVisibility(
-                visible =
-                    controlsVisibilityState.controlsVisible &&
-                        !controlsVisibilityState.controlsLocked,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                ControlsBottomView(
-                    player = player,
-                    progressState = progressState,
-                    chaptersState = chaptersState,
-                    onChaptersClick = { onShowOverlay(OverlayView.CHAPTERS) },
-                    onColorGradingClick = { onShowOverlay(OverlayView.COLOR_GRADING) },
                     hdrOn = hdrOn,
                     onHdrToggle = {
                         val wanted = !hdrOn
-                        // The switch only turns on if the engine actually took the call.
+                        // The switch only turns on when the engine actually accepted the call.
                         if (PlayerEffectsBridge.setHdrSwitch(wanted)) {
                             hdrOn = wanted
                             videoInfoText = if (wanted) "HDR on" else "HDR off"
@@ -133,6 +117,22 @@ fun PlayerControls(
                         }
                         showVideoInfo = info != null
                     },
+                    onColorGradingClick = { onShowOverlay(OverlayView.COLOR_GRADING) },
+                )
+            }
+            Spacer(modifier = Modifier.weight(weight = 1f))
+            AnimatedVisibility(
+                visible =
+                    controlsVisibilityState.controlsVisible &&
+                        !controlsVisibilityState.controlsLocked,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                ControlsBottomView(
+                    player = player,
+                    progressState = progressState,
+                    chaptersState = chaptersState,
+                    onChaptersClick = { onShowOverlay(OverlayView.CHAPTERS) },
                     controlsAlignment = when (playerPreferences.controlButtonsPosition) {
                         ControlButtonsPosition.LEFT -> Alignment.Start
                         ControlButtonsPosition.RIGHT -> Alignment.End
