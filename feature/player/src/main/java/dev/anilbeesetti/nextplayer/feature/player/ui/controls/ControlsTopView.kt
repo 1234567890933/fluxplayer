@@ -109,13 +109,22 @@ fun ControlsTopView(
                     )
                 }
                 PlayerButton(onClick = onPlaylistClick) {
-                    Icon(painter = painterResource(R.drawable.ic_playlist), contentDescription = null)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_playlist),
+                        contentDescription = null,
+                    )
                 }
                 PlayerButton(onClick = onAudioClick) {
-                    Icon(painter = painterResource(R.drawable.ic_audio_track), contentDescription = null)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_audio_track),
+                        contentDescription = null,
+                    )
                 }
                 PlayerButton(onClick = onSubtitleClick) {
-                    Icon(painter = painterResource(R.drawable.ic_subtitle_track), contentDescription = null)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_subtitle_track),
+                        contentDescription = null,
+                    )
                 }
             }
         }
@@ -160,7 +169,11 @@ fun ControlsTopView(
 private fun ControlsTopViewPreview() {
     NextPlayerTheme(darkTheme = true) {
         Surface {
-            ControlsTopView(title = "Title", videoDecoderMode = DecoderMode.HARDWARE, onBackClick = {})
+            ControlsTopView(
+                title = "Title",
+                videoDecoderMode = DecoderMode.HARDWARE,
+                onBackClick = {},
+            )
         }
     }
 }

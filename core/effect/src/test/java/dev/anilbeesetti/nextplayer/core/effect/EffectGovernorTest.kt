@@ -10,12 +10,18 @@ import org.junit.Test
  * that keeps playback alive. This is the meter reading at ten points along the same line.
  */
 class EffectGovernorTest {
-
     @Test
     fun aHealthyDeviceGetsTheFullGrade() {
         val governor = EffectGovernor()
-        assertEquals(EffectBudget.FULL, governor.budget)
-        assertEquals(1f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.FULL,
+            governor.budget,
+        )
+        assertEquals(
+            1f,
+            governor.hdrStrength,
+            0f,
+        )
         assertFalse(governor.isConstrained)
     }
 
@@ -23,8 +29,15 @@ class EffectGovernorTest {
     fun batterySaverSwitchesThePipelineOff() {
         val governor = EffectGovernor()
         governor.onBatterySaver(true)
-        assertEquals(EffectBudget.OFF, governor.budget)
-        assertEquals(0f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.OFF,
+            governor.budget,
+        )
+        assertEquals(
+            0f,
+            governor.hdrStrength,
+            0f,
+        )
         assertTrue(governor.isConstrained)
     }
 
@@ -32,16 +45,30 @@ class EffectGovernorTest {
     fun moderateHeatDropsToTheLightGrade() {
         val governor = EffectGovernor()
         governor.onThermalLevel(ThermalLevel.MODERATE)
-        assertEquals(EffectBudget.LIGHT, governor.budget)
-        assertEquals(0.5f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.LIGHT,
+            governor.budget,
+        )
+        assertEquals(
+            0.5f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     @Test
     fun severeHeatKeepsTheGradeMinimal() {
         val governor = EffectGovernor()
         governor.onThermalLevel(ThermalLevel.SEVERE)
-        assertEquals(EffectBudget.LIGHT, governor.budget)
-        assertEquals(0.3f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.LIGHT,
+            governor.budget,
+        )
+        assertEquals(
+            0.3f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     @Test
@@ -49,23 +76,40 @@ class EffectGovernorTest {
         val governor = EffectGovernor()
         governor.onThermalLevel(ThermalLevel.SEVERE)
         governor.onThermalLevel(ThermalLevel.NONE)
-        assertEquals(EffectBudget.FULL, governor.budget)
-        assertEquals(1f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.FULL,
+            governor.budget,
+        )
+        assertEquals(
+            1f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     @Test
     fun lowRamDeviceStartsLightAndGentler() {
         val governor = EffectGovernor()
         governor.setLowRamDevice(true)
-        assertEquals(EffectBudget.LIGHT, governor.budget)
-        assertEquals(0.6f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.LIGHT,
+            governor.budget,
+        )
+        assertEquals(
+            0.6f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     @Test
     fun oneRefusalMeansTryTheCheapGradeOnly() {
         val governor = EffectGovernor()
         governor.onApplyFailed()
-        assertEquals(EffectBudget.LIGHT, governor.budget)
+        assertEquals(
+            EffectBudget.LIGHT,
+            governor.budget,
+        )
     }
 
     @Test
@@ -73,7 +117,10 @@ class EffectGovernorTest {
         val governor = EffectGovernor()
         governor.onApplyFailed()
         governor.onApplyFailed()
-        assertEquals(EffectBudget.OFF, governor.budget)
+        assertEquals(
+            EffectBudget.OFF,
+            governor.budget,
+        )
     }
 
     @Test
@@ -82,7 +129,10 @@ class EffectGovernorTest {
         governor.onApplyFailed()
         governor.onApplyFailed()
         governor.onApplySucceeded()
-        assertEquals(EffectBudget.FULL, governor.budget)
+        assertEquals(
+            EffectBudget.FULL,
+            governor.budget,
+        )
     }
 
     @Test
@@ -92,8 +142,15 @@ class EffectGovernorTest {
         governor.onThermalLevel(ThermalLevel.CRITICAL)
         governor.onApplyFailed()
         governor.onBatterySaver(true)
-        assertEquals(EffectBudget.OFF, governor.budget)
-        assertEquals(0f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.OFF,
+            governor.budget,
+        )
+        assertEquals(
+            0f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     // ---- fluctuation tests: the same wire read repeatedly must not drift ----
@@ -105,8 +162,15 @@ class EffectGovernorTest {
             governor.onBatterySaver(true)
             governor.onBatterySaver(false)
         }
-        assertEquals(EffectBudget.FULL, governor.budget)
-        assertEquals(1f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.FULL,
+            governor.budget,
+        )
+        assertEquals(
+            1f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     @Test
@@ -116,7 +180,10 @@ class EffectGovernorTest {
             governor.onThermalLevel(ThermalLevel.LIGHT)
             governor.onThermalLevel(ThermalLevel.NONE)
         }
-        assertEquals(EffectBudget.FULL, governor.budget)
+        assertEquals(
+            EffectBudget.FULL,
+            governor.budget,
+        )
     }
 
     @Test
@@ -125,8 +192,15 @@ class EffectGovernorTest {
         governor.onThermalLevel(ThermalLevel.MODERATE)
         val first = governor.budget
         repeat(50) { governor.onThermalLevel(ThermalLevel.MODERATE) }
-        assertEquals(first, governor.budget)
-        assertEquals(0.5f, governor.hdrStrength, 0f)
+        assertEquals(
+            first,
+            governor.budget,
+        )
+        assertEquals(
+            0.5f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     @Test
@@ -146,10 +220,20 @@ class EffectGovernorTest {
         val governor = EffectGovernor()
         governor.onApplyFailed()
         governor.onApplyFailed()
-        assertEquals(EffectBudget.OFF, governor.budget)
+        assertEquals(
+            EffectBudget.OFF,
+            governor.budget,
+        )
         governor.onApplySucceeded()
-        assertEquals(EffectBudget.FULL, governor.budget)
-        assertEquals(1f, governor.hdrStrength, 0f)
+        assertEquals(
+            EffectBudget.FULL,
+            governor.budget,
+        )
+        assertEquals(
+            1f,
+            governor.hdrStrength,
+            0f,
+        )
     }
 
     @Test
@@ -158,9 +242,15 @@ class EffectGovernorTest {
         repeat(5) {
             governor.onApplyFailed()
             governor.onApplyFailed()
-            assertEquals(EffectBudget.OFF, governor.budget)
+            assertEquals(
+                EffectBudget.OFF,
+                governor.budget,
+            )
             governor.onApplySucceeded()
-            assertEquals(EffectBudget.FULL, governor.budget)
+            assertEquals(
+                EffectBudget.FULL,
+                governor.budget,
+            )
         }
     }
 }
