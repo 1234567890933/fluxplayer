@@ -23,6 +23,12 @@ class PlayerEffectsController(private val context: Context) {
     private var thermalScale: Float = 1f
     private var batterySaver: Boolean = false
 
+    // Every setVideoEffects call rebuilds the frame processor, so an identical list is skipped.
+    private var lastSignature: String? = null
+
+    // Every stage runs through here; a stage that throws is skipped, never fatal.
+    private val guard = PipelineGuard()
+
     // Queried once, and guarded: a device with an unusual display stack must not take the
     // player service down during construction.
     private val deviceHasHdrDisplay: Boolean =
