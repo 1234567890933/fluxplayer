@@ -77,7 +77,7 @@ fun BoxScope.ColorGradingView(
                     FilterChip(
                         selected = settings.preset == preset,
                         onClick = { apply(ColorSettings.of(preset)) },
-                        label = { Text(preset.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                        label = { Text(displayName(preset)) },
                     )
                 }
             }
@@ -182,12 +182,17 @@ fun BoxScope.ColorGradingView(
                                 ),
                             )
                         },
-                        label = { Text(temperature.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                        label = { Text(displayName(temperature)) },
                     )
                 }
             }
         }
     }
+}
+
+private fun displayName(value: Enum<*>): String {
+    val lower = value.name.lowercase()
+    return lower.replaceFirstChar { first -> first.uppercase() }
 }
 
 @Composable

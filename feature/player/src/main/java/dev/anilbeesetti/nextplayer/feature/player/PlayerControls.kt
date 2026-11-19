@@ -76,8 +76,8 @@ fun PlayerControls(
             Spacer(modifier = Modifier.weight(weight = 1f))
             AnimatedVisibility(
                 visible =
-                    controlsVisibilityState.controlsVisible &&
-                        !controlsVisibilityState.controlsLocked,
+                controlsVisibilityState.controlsVisible &&
+                    !controlsVisibilityState.controlsLocked,
                 enter = fadeIn(),
                 exit = fadeOut(),
             ) {
@@ -116,8 +116,8 @@ fun PlayerControls(
         when {
             seekGestureState.seekAmount != null -> InfoView(
                 info =
-                    "${seekGestureState.seekAmountFormatted}\n" +
-                        "[${seekGestureState.seekToPositionFormated}]",
+                "${seekGestureState.seekAmountFormatted}\n" +
+                    "[${seekGestureState.seekToPositionFormated}]",
             )
 
             videoZoomAndContentScaleState.isZooming -> InfoView(
