@@ -39,6 +39,8 @@ object ColorEffects {
         settings: ColorSettings,
         hdrEnabled: Boolean,
         deviceHasHdrDisplay: Boolean,
+        hdrContent: Boolean = false,
+        hdrStrength: Float = 1f,
     ): List<Effect> {
         val effects = mutableListOf<Effect>()
 
@@ -90,10 +92,24 @@ object ColorEffects {
             effects += TemperatureMatrix(settings.temperature)
         }
 
-        // 4. HDR look. On an HDR panel ExoPlayer already passes HDR through, so no
-        //    effect is added. On an SDR panel the ACES curve is baked into a 3D LUT.
-        if (hdrEnabled && !deviceHasHdrDisplay) {
-            effects += AcesToneMap.create()
+        // 4. HDR. Three different jobs depending on the panel and the source:
+        //    - HDR panel with HDR video: ExoPlayer already passes HDR through, add nothing.
+        //    - SDR panel with HDR video: compress the highlights with the ACES curve.
+        //    - SDR panel with SDR video: there is no dynamic range to compress, so the switch
+        //      applies the HDR *look* instead (a small contrast and colour lift). Without this
+        //      the toggle did nothing at all on ordinary videos, which is why it felt broken.
+        if (hdrEnabled) {
+            if (deviceHasHdrDisplay) {
+                // pass-through
+            } else if (hdrContent) {
+                effects += AcesToneMap.create()
+            } else {
+                // Strength comes from the governor: a low-RAM or warm device gets a gentler
+                // grade, so the frame processor is never asked for more than it can afford.
+                val strength = hdrStrength.coerceIn(0f, 1f)
+                effects += Contrast(1f + 0.18f * strength)
+                effects += SaturationMatrix(1f + 0.15f * strength)
+            }
         }
 
         return effects

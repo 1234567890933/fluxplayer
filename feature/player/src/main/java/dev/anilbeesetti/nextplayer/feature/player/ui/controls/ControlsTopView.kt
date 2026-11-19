@@ -10,16 +10,12 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -35,7 +31,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import dev.anilbeesetti.nextplayer.core.effect.PlayerEffectsBridge
 import dev.anilbeesetti.nextplayer.core.ui.R
 import dev.anilbeesetti.nextplayer.core.ui.extensions.copy
 import dev.anilbeesetti.nextplayer.core.ui.theme.NextPlayerTheme
@@ -54,14 +49,12 @@ fun ControlsTopView(
     onAudioClick: () -> Unit = {},
     onSubtitleClick: () -> Unit = {},
     onPlaylistClick: () -> Unit = {},
-    onColorGradingClick: () -> Unit = {},
 ) {
     val firstControlFocusRequester = remember { FocusRequester() }
     val systemBarsPadding = WindowInsets.systemBars.union(
         WindowInsets.displayCutout,
     ).asPaddingValues()
     val decoderDescription = stringResource(R.string.select_decoders)
-    var hdrOn by remember { mutableStateOf(false) }
     // Add top spacing only when the system bars don't already provide it (e.g. on TV / landscape).
     val extraTopPadding = if (systemBarsPadding.calculateTopPadding() == 0.dp) 16.dp else 0.dp
     Row(
@@ -122,32 +115,6 @@ fun ControlsTopView(
                 Icon(
                     painter = painterResource(R.drawable.ic_subtitle_track),
                     contentDescription = null,
-                )
-            }
-
-            PlayerButton(
-                onClick = {
-                    hdrOn = !hdrOn
-                    PlayerEffectsBridge.setHdrSwitch(hdrOn)
-                },
-            ) {
-                BasicText(
-                    text = if (hdrOn) "HDR on" else "HDR",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = if (hdrOn) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                    ),
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                )
-            }
-            PlayerButton(onClick = onColorGradingClick) {
-                BasicText(
-                    text = "Colour",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
         }

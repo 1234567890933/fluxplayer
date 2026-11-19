@@ -50,6 +50,7 @@ import dev.anilbeesetti.nextplayer.core.data.repository.MediaRepository
 import dev.anilbeesetti.nextplayer.core.data.repository.PreferencesRepository
 import dev.anilbeesetti.nextplayer.core.effect.BatteryGuard
 import dev.anilbeesetti.nextplayer.core.effect.FrameDropGuard
+import dev.anilbeesetti.nextplayer.core.effect.HdrContentDetector
 import dev.anilbeesetti.nextplayer.core.effect.PlayerEffectsBridge
 import dev.anilbeesetti.nextplayer.core.effect.PlayerEffectsController
 import dev.anilbeesetti.nextplayer.core.effect.PowerMode
@@ -306,6 +307,12 @@ class PlayerService : MediaSessionService() {
 
         override fun onTracksChanged(tracks: Tracks) {
             super.onTracksChanged(tracks)
+            // HdrContentDetector already reads the real colour metadata (ST2084 is HDR10, HLG is
+            // broadcast HDR) but nothing ever called it, so the tone map could not engage. This is
+            // the missing wire between the engine and the effect pipeline.
+            effectsController.setHdrContent(
+                HdrContentDetector.isHdr(HdrContentDetector.selectedVideoFormat(tracks)),
+            )
             serviceScope.launch {
                 mediaSession?.player?.currentTracks?.let(block = ::handleUnsupportedTracks)
             }

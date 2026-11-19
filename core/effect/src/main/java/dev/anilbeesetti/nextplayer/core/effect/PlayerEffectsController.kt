@@ -1,6 +1,8 @@
 package dev.anilbeesetti.nextplayer.core.effect
 
+import android.app.ActivityManager
 import android.content.Context
+import androidx.media3.common.Effect
 import androidx.media3.exoplayer.ExoPlayer
 
 /**
@@ -12,6 +14,8 @@ import androidx.media3.exoplayer.ExoPlayer
  */
 class PlayerEffectsController(private val context: Context) {
 
+    private val governor = EffectGovernor()
+
     private var player: ExoPlayer? = null
     private var settings: ColorSettings = ColorSettings()
     private var hdrSwitchOn: Boolean = false
@@ -19,7 +23,18 @@ class PlayerEffectsController(private val context: Context) {
     private var thermalScale: Float = 1f
     private var batterySaver: Boolean = false
 
-    private val deviceHasHdrDisplay: Boolean = ColorEffects.deviceHasHdrDisplay(context)
+    // Queried once, and guarded: a device with an unusual display stack must not take the
+    // player service down during construction.
+    private val deviceHasHdrDisplay: Boolean =
+        runCatching { ColorEffects.deviceHasHdrDisplay(context) }.getOrDefault(false)
+
+    init {
+        // A phone that reports itself as low-RAM gets the light grade from the start, before any
+        // effect has had a chance to fail.
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        val lowRam = runCatching { activityManager?.isLowRamDevice == true }.getOrDefault(false)
+        governor.setLowRamDevice(lowRam)
+    }
 
     fun attach(exoPlayer: ExoPlayer) {
         player = exoPlayer
@@ -49,6 +64,7 @@ class PlayerEffectsController(private val context: Context) {
 
     fun onThermalLevel(level: ThermalLevel) {
         thermalScale = level.effectScale
+        governor.onThermalLevel(level)
         apply()
     }
 
@@ -56,12 +72,26 @@ class PlayerEffectsController(private val context: Context) {
     fun setBatterySaver(enabled: Boolean) {
         if (batterySaver == enabled) return
         batterySaver = enabled
+        governor.onBatterySaver(enabled)
         apply()
     }
 
     val isHdrActive: Boolean
         get() = (hdrSwitchOn || hdrContent) && !batterySaver
 
+    /**
+     * True once the GPU pipeline has refused an effect list. The player keeps playing in that
+     * state, just without the grade, instead of dying on a device that cannot run it.
+     */
+    var isDegraded: Boolean = false
+        private set
+
+    /**
+     * Serialised on purpose: two calls landing together (a slider drag plus a thermal change)
+     * must not interleave two different effect lists into the player, which shows up as flicker.
+     * This is the protection lock on the connection.
+     */
+    @Synchronized
     private fun apply() {
         val exoPlayer = player ?: return
         val scaled = ColorSettings(
@@ -74,12 +104,55 @@ class PlayerEffectsController(private val context: Context) {
             temperature = settings.temperature,
             preset = settings.preset,
         )
-        exoPlayer.setVideoEffects(
+        // Protection layer. Everything below this point talks to the GPU, and on a cheap or
+        // busy device that can refuse the work. Losing the grade is acceptable; losing playback
+        // is not, so each attempt is guarded and falls back one step at a time.
+        if (governor.budget == EffectBudget.OFF) {
+            runCatching { exoPlayer.setVideoEffects(emptyList()) }
+            isDegraded = true
+            return
+        }
+
+        val full = runCatching {
             ColorEffects.build(
                 settings = scaled,
                 hdrEnabled = isHdrActive,
                 deviceHasHdrDisplay = deviceHasHdrDisplay,
-            ),
-        )
+                hdrContent = hdrContent,
+                hdrStrength = governor.hdrStrength,
+            )
+        }.getOrElse { emptyList() }
+
+        if (governor.budget == EffectBudget.FULL && full.isNotEmpty() &&
+            tryApply(exoPlayer, full)
+        ) {
+            governor.onApplySucceeded()
+            isDegraded = false
+            return
+        }
+        // Second attempt: tone and colour only, no blur and no convolution. These are the
+        // cheapest effects the engine has and work on almost any GL ES 2.0 device.
+        val light = runCatching {
+            ColorEffects.build(
+                settings = scaled.copy(sharpness = 0f, clarity = 0f, noiseReduce = 0f),
+                hdrEnabled = isHdrActive,
+                deviceHasHdrDisplay = deviceHasHdrDisplay,
+                hdrContent = hdrContent,
+                hdrStrength = governor.hdrStrength,
+            )
+        }.getOrElse { emptyList() }
+
+        if (light.isNotEmpty() && tryApply(exoPlayer, light)) {
+            governor.onApplySucceeded()
+            isDegraded = false
+            return
+        }
+        governor.onApplyFailed()
+        // Last resort: no grade at all, but the video keeps playing.
+        runCatching { exoPlayer.setVideoEffects(emptyList()) }
+        isDegraded = true
     }
+
+    private fun tryApply(exoPlayer: ExoPlayer, effects: List<Effect>): Boolean =
+        runCatching { exoPlayer.setVideoEffects(effects) }.isSuccess
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.NavigateNext
 import androidx.compose.material3.Icon
@@ -26,7 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -45,6 +48,7 @@ import androidx.media3.common.util.Util.getStringForTime
 import androidx.media3.ui.compose.state.ProgressStateWithTickInterval
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
 import dev.anilbeesetti.nextplayer.core.common.extensions.isTelevision
+import dev.anilbeesetti.nextplayer.core.effect.PlayerEffectsBridge
 import dev.anilbeesetti.nextplayer.core.model.VideoContentScale
 import dev.anilbeesetti.nextplayer.core.ui.R
 import dev.anilbeesetti.nextplayer.core.ui.extensions.copy
@@ -84,6 +88,10 @@ fun ControlsBottomView(
     onPlayInBackgroundClick: () -> Unit,
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
+    onColorGradingClick: () -> Unit = {},
+    onInfoClick: () -> Unit = {},
+    hdrOn: Boolean = false,
+    onHdrToggle: () -> Unit = {},
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(
         WindowInsets.displayCutout,
@@ -210,6 +218,34 @@ fun ControlsBottomView(
 
                         if (!isTv) {
                             RotateButton()
+                        }
+
+                        PlayerButton(onClick = onHdrToggle) {
+                            BasicText(
+                                text = if (hdrOn) "HDR on" else "HDR",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = if (hdrOn) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                ),
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                            )
+                        }
+                        PlayerButton(onClick = onInfoClick) {
+                            BasicText(
+                                text = "Info",
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                            )
+                        }
+                        PlayerButton(onClick = onColorGradingClick) {
+                            BasicText(
+                                text = "Colour",
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                            )
                         }
                     }
                 }

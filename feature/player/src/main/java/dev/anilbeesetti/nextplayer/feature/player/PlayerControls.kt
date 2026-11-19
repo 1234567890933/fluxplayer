@@ -9,12 +9,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.state.ProgressStateWithTickInterval
+import dev.anilbeesetti.nextplayer.core.effect.HdrContentDetector
+import dev.anilbeesetti.nextplayer.core.effect.PlayerEffectsBridge
+import dev.anilbeesetti.nextplayer.core.effect.VideoInfo
 import dev.anilbeesetti.nextplayer.core.model.ControlButtonsPosition
 import dev.anilbeesetti.nextplayer.core.model.PlayerPreferences
 import dev.anilbeesetti.nextplayer.feature.player.extensions.nameRes
@@ -30,6 +38,7 @@ import dev.anilbeesetti.nextplayer.feature.player.ui.controls.ControlsBottomView
 import dev.anilbeesetti.nextplayer.feature.player.ui.controls.ControlsMiddleView
 import dev.anilbeesetti.nextplayer.feature.player.ui.controls.ControlsTopView
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.DecoderMode
+import kotlinx.coroutines.delay
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -52,6 +61,19 @@ fun PlayerControls(
     modifier: Modifier = Modifier,
     middleControlsModifier: Modifier = Modifier,
 ) {
+    // The video info overlay: filled from the real track metadata when the button is pressed,
+    // then hidden again after four seconds as the brief asks.
+    var showVideoInfo by remember { mutableStateOf(false) }
+    // The HDR switch lives here so the button, the engine and the confirmation text all agree.
+    var hdrOn by remember { mutableStateOf(false) }
+    var videoInfoText by remember { mutableStateOf("") }
+    LaunchedEffect(showVideoInfo) {
+        if (showVideoInfo) {
+            delay(4000)
+            showVideoInfo = false
+        }
+    }
+
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
@@ -69,7 +91,6 @@ fun PlayerControls(
                     onAudioClick = { onShowOverlay(OverlayView.AUDIO_SELECTOR) },
                     onSubtitleClick = { onShowOverlay(OverlayView.SUBTITLE_SELECTOR) },
                     onPlaylistClick = { onShowOverlay(OverlayView.PLAYLIST) },
-                    onColorGradingClick = { onShowOverlay(OverlayView.COLOR_GRADING) },
                     onBackClick = onBackClick,
                 )
             }
@@ -86,6 +107,31 @@ fun PlayerControls(
                     progressState = progressState,
                     chaptersState = chaptersState,
                     onChaptersClick = { onShowOverlay(OverlayView.CHAPTERS) },
+                    onColorGradingClick = { onShowOverlay(OverlayView.COLOR_GRADING) },
+                    hdrOn = hdrOn,
+                    onHdrToggle = {
+                        val wanted = !hdrOn
+                        // The switch only turns on if the engine actually took the call.
+                        if (PlayerEffectsBridge.setHdrSwitch(wanted)) {
+                            hdrOn = wanted
+                            videoInfoText = if (wanted) "HDR on" else "HDR off"
+                        } else {
+                            videoInfoText = "HDR unavailable - no player attached"
+                        }
+                        showVideoInfo = true
+                    },
+                    onInfoClick = {
+                        val info = VideoInfo.of(
+                            HdrContentDetector.selectedVideoFormat(player?.currentTracks),
+                        )
+                        videoInfoText = if (info == null) {
+                            ""
+                        } else {
+                            "${info.resolutionLabel}  ${info.frameRateLabel}\n" +
+                                "${info.codecLabel}  ${info.hdrLabel}"
+                        }
+                        showVideoInfo = info != null
+                    },
                     controlsAlignment = when (playerPreferences.controlButtonsPosition) {
                         ControlButtonsPosition.LEFT -> Alignment.Start
                         ControlButtonsPosition.RIGHT -> Alignment.End
@@ -122,6 +168,11 @@ fun PlayerControls(
 
             videoZoomAndContentScaleState.isZooming -> InfoView(
                 info = "${(videoZoomAndContentScaleState.zoom * 100).toInt()}%",
+            )
+
+            showVideoInfo -> InfoView(
+                info = videoInfoText,
+                textStyle = MaterialTheme.typography.bodyLarge,
             )
 
             videoZoomAndContentScaleState.showContentScaleIndicator -> InfoView(

@@ -28,11 +28,14 @@ object PlayerEffectsBridge {
         }
     }
 
-    fun setColorSettings(settings: ColorSettings) {
-        controller?.setColorSettings(settings)
-    }
+    /**
+     * Returns true only when a live controller took the call. The UI uses this to decide whether
+     * to show the switch as on: a button that lights up while nothing happens is a lie, and this
+     * is what stops that.
+     */
+    fun setColorSettings(settings: ColorSettings): Boolean =
+        controller?.let { runCatching { it.setColorSettings(settings) }.isSuccess } ?: false
 
-    fun setHdrSwitch(enabled: Boolean) {
-        controller?.setHdrSwitch(enabled)
-    }
+    fun setHdrSwitch(enabled: Boolean): Boolean =
+        controller?.let { runCatching { it.setHdrSwitch(enabled) }.isSuccess } ?: false
 }
