@@ -216,7 +216,10 @@ private fun GradeSlider(
             )
         }
         Slider(
-            value = value.coerceIn(range.start, range.endInclusive),
+            value = value.coerceIn(
+                minimumValue = range.start,
+                maximumValue = range.endInclusive,
+            ),
             onValueChange = onChange,
             valueRange = range,
         )
