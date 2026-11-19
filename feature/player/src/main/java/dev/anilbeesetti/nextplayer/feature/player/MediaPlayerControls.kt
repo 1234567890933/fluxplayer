@@ -173,6 +173,7 @@ internal fun MediaPlayerControls(
                     onBackClick = { onAction(PlayerAction.NavigateUp) },
                     onPlayInBackgroundClick = { onAction(PlayerAction.PlayInBackground) },
                     onToggleTimeDisplay = { onAction(PlayerAction.ToggleTimeDisplay) },
+                    onEnhanceChanged = { onAction(PlayerAction.SetEnhancePreset(it)) },
                     onPictureInPictureClick = onPictureInPictureClick,
                     middleControlsModifier = Modifier.thenIf(condition = isTv) {
                         focusRequester(focusRequester = middleControlsFocusRequester)

@@ -21,7 +21,11 @@ fun VideoContentScale.drawableRes(): Int = when (this) {
 
 fun VideoContentScale.toContentScale(): ContentScale = when (this) {
     VideoContentScale.BEST_FIT -> ContentScale.Fit
+
     VideoContentScale.STRETCH -> ContentScale.FillBounds
+
     VideoContentScale.CROP -> ContentScale.Crop
-    VideoContentScale.HUNDRED_PERCENT -> FixedScale(value = 1.0f) // TODO: fix this
+
+    // FixedScale(1f) draws the video at its own pixel size, which is exactly what 100% means.
+    VideoContentScale.HUNDRED_PERCENT -> FixedScale(value = 1.0f)
 }

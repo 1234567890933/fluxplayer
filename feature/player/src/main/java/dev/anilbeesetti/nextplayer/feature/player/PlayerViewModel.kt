@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dev.anilbeesetti.nextplayer.core.data.repository.MediaRepository
 import dev.anilbeesetti.nextplayer.core.data.repository.PreferencesRepository
 import dev.anilbeesetti.nextplayer.core.domain.GetSortedPlaylistUseCase
+import dev.anilbeesetti.nextplayer.core.effect.EnhancePreset
 import dev.anilbeesetti.nextplayer.core.model.LoopMode
 import dev.anilbeesetti.nextplayer.core.model.PlayerPreferences
 import dev.anilbeesetti.nextplayer.core.model.Video
@@ -88,6 +89,8 @@ class PlayerViewModel(
 
             is PlayerAction.ToggleTimeDisplay -> toggleTimeDisplay()
 
+            is PlayerAction.SetEnhancePreset -> setEnhancePreset(action.preset)
+
             is PlayerAction.OnVideoZoomEvent -> onVideoZoomEvent(action.event)
 
             is PlayerAction.OnSubtitleOptionEvent -> onSubtitleOptionEvent(action.event)
@@ -128,6 +131,14 @@ class PlayerViewModel(
     private fun setLoopMode(loopMode: LoopMode) {
         viewModelScope.launch {
             preferencesRepository.updatePlayerPreferences { it.copy(loopMode = loopMode) }
+        }
+    }
+
+    private fun setEnhancePreset(preset: EnhancePreset) {
+        viewModelScope.launch {
+            preferencesRepository.updatePlayerPreferences {
+                it.copy(smartEnhancePreset = preset.name)
+            }
         }
     }
 
@@ -212,6 +223,7 @@ sealed interface PlayerAction {
     data class UpdateSubtitleOffset(val y: Float) : PlayerAction
     data class SetLoopMode(val loopMode: LoopMode) : PlayerAction
     data object ToggleTimeDisplay : PlayerAction
+    data class SetEnhancePreset(val preset: EnhancePreset) : PlayerAction
     data class OnVideoZoomEvent(val event: VideoZoomEvent) : PlayerAction
     data class OnSubtitleOptionEvent(val event: SubtitleOptionsEvent) : PlayerAction
 }

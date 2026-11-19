@@ -36,32 +36,44 @@ class PlayerEffectsController(private val context: Context) {
         governor.setLowRamDevice(lowRam)
     }
 
+    @Synchronized
     fun attach(exoPlayer: ExoPlayer) {
         player = exoPlayer
+        // A new player starts with no effects of its own. Without this the identical signature
+        // check below would skip the first apply and the new surface would stay ungraded, which is
+        // exactly what happens after a decoder switch or a move to the next video.
+        lastSignature = null
+        guard.reset()
         apply()
     }
 
+    @Synchronized
     fun detach() {
         player?.setVideoEffects(emptyList())
         player = null
+        lastSignature = null
     }
 
+    @Synchronized
     fun setColorSettings(newSettings: ColorSettings) {
         settings = newSettings
         apply()
     }
 
+    @Synchronized
     fun setHdrSwitch(enabled: Boolean) {
         hdrSwitchOn = enabled
         apply()
     }
 
+    @Synchronized
     fun setHdrContent(isHdr: Boolean) {
         if (hdrContent == isHdr) return
         hdrContent = isHdr
         apply()
     }
 
+    @Synchronized
     fun onThermalLevel(level: ThermalLevel) {
         thermalScale = level.effectScale
         governor.onThermalLevel(level)
@@ -69,6 +81,7 @@ class PlayerEffectsController(private val context: Context) {
     }
 
     /** Below 20 % and unplugged the HDR tone map is dropped, as the brief requires. */
+    @Synchronized
     fun setBatterySaver(enabled: Boolean) {
         if (batterySaver == enabled) return
         batterySaver = enabled
@@ -113,7 +126,7 @@ class PlayerEffectsController(private val context: Context) {
             return
         }
 
-        val full = runCatching {
+        val full = guard.attempt("build-full") {
             ColorEffects.build(
                 settings = scaled,
                 hdrEnabled = isHdrActive,
@@ -121,7 +134,7 @@ class PlayerEffectsController(private val context: Context) {
                 hdrContent = hdrContent,
                 hdrStrength = governor.hdrStrength,
             )
-        }.getOrElse { emptyList() }
+        } ?: emptyList()
 
         if (governor.budget == EffectBudget.FULL && full.isNotEmpty() &&
             tryApply(full)
@@ -132,7 +145,7 @@ class PlayerEffectsController(private val context: Context) {
         }
         // Second attempt: tone and colour only, no blur and no convolution. These are the
         // cheapest effects the engine has and work on almost any GL ES 2.0 device.
-        val light = runCatching {
+        val light = guard.attempt("build-light") {
             ColorEffects.build(
                 settings = scaled.copy(
                     sharpness = 0f,
@@ -144,7 +157,7 @@ class PlayerEffectsController(private val context: Context) {
                 hdrContent = hdrContent,
                 hdrStrength = governor.hdrStrength,
             )
-        }.getOrElse { emptyList() }
+        } ?: emptyList()
 
         if (light.isNotEmpty() && tryApply(light)) {
             governor.onApplySucceeded()
@@ -158,5 +171,5 @@ class PlayerEffectsController(private val context: Context) {
     }
 
     private fun tryApply(effects: List<Effect>): Boolean =
-        runCatching { player?.setVideoEffects(effects) }.isSuccess
+        guard.attempt("apply") { player?.setVideoEffects(effects) } != null
 }

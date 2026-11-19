@@ -18,6 +18,9 @@ data class PlayerPreferences(
     val autoBackgroundPlay: Boolean = false,
     val loopMode: LoopMode = LoopMode.OFF,
 
+    // Smart Enhance: remembered across videos so the picture looks the same every time.
+    val smartEnhancePreset: String = "AUTO",
+
     // Controls (Gestures)
     @Deprecated(
         message =

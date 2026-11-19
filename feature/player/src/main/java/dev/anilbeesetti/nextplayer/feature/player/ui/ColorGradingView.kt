@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.anilbeesetti.nextplayer.core.effect.ColorPalette
 import dev.anilbeesetti.nextplayer.core.effect.ColorPreset
 import dev.anilbeesetti.nextplayer.core.effect.ColorSettings
 import dev.anilbeesetti.nextplayer.core.effect.ColorTemperature
@@ -45,6 +46,7 @@ fun BoxScope.ColorGradingView(
 
     fun apply(next: ColorSettings) {
         settings = next
+        ColorGradeState.current = next
         PlayerEffectsBridge.setColorSettings(next)
     }
 
@@ -64,7 +66,30 @@ fun BoxScope.ColorGradingView(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "Presets",
+                text = "Palettes",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
+            // Complete looks, one tap each. This is the row most people will use: punch for sport
+            // and games, cinema for films, mono when the colour is getting in the way.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ColorPalette.entries.forEach { palette ->
+                    FilterChip(
+                        selected = settings.toString() == palette.settings().toString(),
+                        onClick = { apply(palette.settings()) },
+                        label = { Text(palette.label) },
+                    )
+                }
+            }
+
+            Text(
+                text = "Fine tuning",
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(bottom = 4.dp),
             )

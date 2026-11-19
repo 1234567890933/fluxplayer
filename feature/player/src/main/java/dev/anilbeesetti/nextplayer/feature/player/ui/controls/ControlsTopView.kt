@@ -56,6 +56,8 @@ fun ControlsTopView(
     onHdrToggle: () -> Unit = {},
     onInfoClick: () -> Unit = {},
     onColorGradingClick: () -> Unit = {},
+    enhanceLabel: String = "Enhance auto",
+    onEnhanceClick: () -> Unit = {},
 ) {
     val firstControlFocusRequester = remember { FocusRequester() }
     val systemBarsPadding = WindowInsets.systemBars.union(
@@ -150,6 +152,19 @@ fun ControlsTopView(
                 BasicText(
                     text = "Info",
                     style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                )
+            }
+            PlayerButton(onClick = onEnhanceClick) {
+                BasicText(
+                    text = enhanceLabel,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = if (enhanceLabel.endsWith("off")) {
+                            Color.White
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                    ),
                     modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }

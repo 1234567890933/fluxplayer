@@ -33,9 +33,20 @@ object PlayerEffectsBridge {
      * to show the switch as on: a button that lights up while nothing happens is a lie, and this
      * is what stops that.
      */
+
+    // True when the GPU refused the grade, so the picture is not what the viewer asked for.
+    val isDegraded: Boolean
+        get() = controller?.isDegraded ?: false
+
     fun setColorSettings(settings: ColorSettings): Boolean =
         controller?.let { runCatching { it.setColorSettings(settings) }.isSuccess } ?: false
 
     fun setHdrSwitch(enabled: Boolean): Boolean =
         controller?.let { runCatching { it.setHdrSwitch(enabled) }.isSuccess } ?: false
+
+    /** Applies a Smart Enhance preset tuned for this device. Returns false if no player is attached. */
+    fun applyEnhance(preset: EnhancePreset, tier: DeviceTier): Boolean {
+        val settings = EnhanceTuning.settingsFor(preset, tier)
+        return setColorSettings(settings)
+    }
 }
