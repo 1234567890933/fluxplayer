@@ -1,6 +1,5 @@
 package dev.anilbeesetti.nextplayer.feature.player
 
-import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
 import androidx.annotation.OptIn
@@ -78,6 +77,7 @@ fun PlayerControls(
 ) {
     // The video info overlay: filled from the real track metadata when the button is pressed,
     // then hidden again after four seconds as the brief asks.
+    val context = LocalContext.current
     var showVideoInfo by remember { mutableStateOf(false) }
     // The HDR switch lives here so the button, the engine and the confirmation text all agree.
     var hdrOn by remember { mutableStateOf(false) }
@@ -85,20 +85,10 @@ fun PlayerControls(
     var enhancePreset by remember {
         mutableStateOf(EnhancePreset.of(playerPreferences.smartEnhancePreset))
     }
-    val deviceTier = remember {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-        val memory = ActivityManager.MemoryInfo()
-        activityManager?.getMemoryInfo(memory)
-        val ramMb = if (memory.totalMem > 0) memory.totalMem / (1024L * 1024L) else 2048L
-        // reqGlEsVersion packs major in the high 16 bits, so 0x00030000 means GLES 3.
-        val glMajor =
-            (activityManager?.deviceConfigurationInfo?.reqGlEsVersion ?: 0x00030000) shr 16
-        DeviceTier.of(ramMb, glMajor)
-    }
+    val deviceTier = remember { DeviceTier.detect(context) }
     // A panel that cannot do HDR still deserves the experience, so the look switches itself on
     // there. On a real HDR screen the switch stays off and the engine passes the signal through.
     val hostView = LocalView.current
-    val context = LocalContext.current
     LaunchedEffect(Unit) {
         PlayerEffectsBridge.applyEnhance(enhancePreset, deviceTier)
         val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) hostView.display else null
