@@ -28,6 +28,9 @@ object EnhanceTuning {
         EnhancePreset.BALANCED -> grade(0.60f)
 
         EnhancePreset.VIVID -> grade(1.00f)
+
+        // MAX is the top of the curve: the renderer clamps sharpness and contrast on its own.
+        EnhancePreset.MAX -> grade(1.25f)
     }
 
     /** One curve, four strengths: every knob moves together so no setting fights another. */

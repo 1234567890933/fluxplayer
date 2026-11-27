@@ -10,6 +10,7 @@ enum class EnhancePreset {
     SUBTLE,
     BALANCED,
     VIVID,
+    MAX,
     ;
 
     val label: String
@@ -19,6 +20,7 @@ enum class EnhancePreset {
             SUBTLE -> "Enhance subtle"
             BALANCED -> "Enhance balanced"
             VIVID -> "Enhance vivid"
+            MAX -> "Enhance max"
         }
 
     /** The next preset when the chip is tapped, so one button can reach every state. */
@@ -27,7 +29,8 @@ enum class EnhancePreset {
         AUTO -> SUBTLE
         SUBTLE -> BALANCED
         BALANCED -> VIVID
-        VIVID -> OFF
+        VIVID -> MAX
+        MAX -> OFF
     }
 
     companion object {

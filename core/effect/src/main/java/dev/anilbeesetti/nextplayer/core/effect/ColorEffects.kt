@@ -102,7 +102,7 @@ object ColorEffects {
             if (deviceHasHdrDisplay) {
                 // pass-through
             } else if (hdrContent) {
-                effects += AcesToneMap.create()
+                effects += AcesToneMap.create(hdrStrength)
             } else {
                 // Strength comes from the governor: a low-RAM or warm device gets a gentler
                 // grade, so the frame processor is never asked for more than it can afford.
@@ -230,14 +230,14 @@ object ColorEffects {
     private object AcesToneMap {
         private const val SIZE = 17
 
-        fun create(): SingleColorLut {
+        fun create(strength: Float = 1f): SingleColorLut {
             val last = SIZE - 1
             val cube = Array(SIZE) { r ->
                 Array(SIZE) { g ->
                     IntArray(SIZE) { b ->
-                        val red = to8(curve(r / last.toFloat()))
-                        val green = to8(curve(g / last.toFloat()))
-                        val blue = to8(curve(b / last.toFloat()))
+                        val red = to8(AcesCurve.mix(r / last.toFloat(), strength))
+                        val green = to8(AcesCurve.mix(g / last.toFloat(), strength))
+                        val blue = to8(AcesCurve.mix(b / last.toFloat(), strength))
                         (0xFF shl 24) or (red shl 16) or (green shl 8) or blue
                     }
                 }
@@ -245,13 +245,7 @@ object ColorEffects {
             return SingleColorLut.createFromCube(cube)
         }
 
-        fun curve(x: Float): Float {
-            val value = (x * (2.51f * x + 0.03f)) / (x * (2.43f * x + 0.59f) + 0.14f)
-            return value.coerceIn(
-                0f,
-                1f,
-            )
-        }
+        fun curve(x: Float): Float = AcesCurve.tone(x)
 
         private fun to8(value: Float): Int = (value * 255f).toInt().coerceIn(
             0,
