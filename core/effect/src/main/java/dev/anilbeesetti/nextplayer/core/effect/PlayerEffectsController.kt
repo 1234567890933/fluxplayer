@@ -113,10 +113,13 @@ class PlayerEffectsController(private val context: Context) {
     @Synchronized
     private fun apply() {
         val exoPlayer = player ?: return
+        // Heat costs the expensive stages (blur and convolution), not the colour. Pulling the
+        // colour back as well made a warm phone look washed out, which the viewer noticed long
+        // before the frame rate told them anything was wrong.
         val scaled = ColorSettings(
-            brightness = settings.brightness * thermalScale,
-            contrast = 1f + (settings.contrast - 1f) * thermalScale,
-            saturation = 1f + (settings.saturation - 1f) * thermalScale,
+            brightness = settings.brightness,
+            contrast = settings.contrast,
+            saturation = settings.saturation,
             sharpness = settings.sharpness * thermalScale,
             clarity = settings.clarity * thermalScale,
             noiseReduce = settings.noiseReduce * thermalScale,
@@ -127,6 +130,18 @@ class PlayerEffectsController(private val context: Context) {
         // busy device that can refuse the work. Losing the grade is acceptable; losing playback
         // is not, so each attempt is guarded and falls back one step at a time.
         if (governor.budget == EffectBudget.OFF) {
+            // HDR content on an SDR panel is the one case worth a last attempt: without the tone
+            // map the highlights clip hard, so a single cheap LUT is tried before giving up.
+            if (isHdrActive && !deviceHasHdrDisplay && hdrContent) {
+                val emergency = guard.attempt<List<Effect>>("build-emergency-hdr") {
+                    listOf(AcesToneMap.create())
+                }
+                if (emergency != null && tryApply(emergency)) {
+                    governor.onApplySucceeded()
+                    isDegraded = true
+                    return
+                }
+            }
             runCatching { exoPlayer.setVideoEffects(emptyList()) }
             isDegraded = true
             return

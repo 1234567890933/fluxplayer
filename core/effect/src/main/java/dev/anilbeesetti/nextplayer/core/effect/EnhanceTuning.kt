@@ -18,14 +18,14 @@ object EnhanceTuning {
         )
 
         EnhancePreset.AUTO -> when (tier) {
-            DeviceTier.LITE -> grade(0.28f)
-            DeviceTier.BALANCED -> grade(0.55f)
-            DeviceTier.ULTRA -> grade(0.85f)
+            DeviceTier.LITE -> grade(0.42f)
+            DeviceTier.BALANCED -> grade(0.62f)
+            DeviceTier.ULTRA -> grade(0.90f)
         }
 
-        EnhancePreset.SUBTLE -> grade(0.30f)
+        EnhancePreset.SUBTLE -> grade(0.35f)
 
-        EnhancePreset.BALANCED -> grade(0.60f)
+        EnhancePreset.BALANCED -> grade(0.65f)
 
         EnhancePreset.VIVID -> grade(1.00f)
 
@@ -36,11 +36,11 @@ object EnhanceTuning {
     /** One curve, four strengths: every knob moves together so no setting fights another. */
     private fun grade(strength: Float): ColorSettings = ColorSettings(
         brightness = 0.04f * strength,
-        contrast = 1f + 0.30f * strength,
-        saturation = 1f + 0.35f * strength,
-        sharpness = 0.60f * strength,
-        clarity = 0.55f * strength,
-        noiseReduce = 0.25f * strength,
+        contrast = 1f + 0.38f * strength,
+        saturation = 1f + 0.42f * strength,
+        sharpness = 0.65f * strength,
+        clarity = 0.58f * strength,
+        noiseReduce = 0.28f * strength,
         preset = ColorPreset.CUSTOM,
     )
 }
